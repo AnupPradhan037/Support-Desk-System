@@ -1,138 +1,123 @@
-
-import { useState, useEffect } from 'react';
-import { FaTicketAlt } from 'react-icons/fa';
-import { useSelector, useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
-
-import Spinner from '../components/Spinner';
-import BackButton from '../components/BackButton';
-import { createTicket, reset } from '../features/tickets/ticketSlice';
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useSelector, useDispatch } from 'react-redux'
+import { toast } from 'react-toastify'
+import { createTicket } from '../features/tickets/ticketSlice'
+import { PRODUCTS, CATEGORIES, PRIORITIES } from '../constants'
+import BackButton from '../components/BackButton'
+import Spinner from '../components/Spinner'
 
 function NewTicket() {
-  const { user } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.auth)
+  const { isLoading } = useSelector((state) => state.tickets)
 
-  const { isLoading, isError, isSuccess, message } = useSelector(
-    (state) => state.tickets
-  );
+  const [product, setProduct] = useState(PRODUCTS[0])
+  const [category, setCategory] = useState('Other')
+  const [priority, setPriority] = useState('medium')
+  const [description, setDescription] = useState('')
 
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
 
-  const [product, setProduct] = useState('iPhone');
-  const [description, setDescription] = useState('');
+  const onSubmit = async (e) => {
+    e.preventDefault()
 
-  useEffect(() => {
-    if (isError) {
-      toast.error(message);
+    try {
+      await dispatch(
+        createTicket({ product, category, priority, description })
+      ).unwrap()
+      toast.success('New ticket created!')
+      navigate('/tickets')
+    } catch (error) {
+      toast.error(error)
     }
-
-    if (isSuccess) {
-      dispatch(reset());
-      navigate('/tickets');
-    }
-
-    return () => {
-      dispatch(reset());
-    };
-  }, [dispatch, isError, isSuccess, message, navigate]);
-
-  const onSubmit = (e) => {
-    e.preventDefault();
-
-    dispatch(
-      createTicket({
-        product,
-        description,
-      })
-    );
-  };
-
-  if (isLoading) {
-    return <Spinner />;
   }
+
+  if (isLoading) return <Spinner />
 
   return (
     <>
-      <BackButton />
+      <BackButton url="/" />
 
       <section className="heading">
-        <h1>
-          <FaTicketAlt /> Create New Ticket
-        </h1>
-
-        <p>Please fill out the form below.</p>
+        <h1>Create New Ticket</h1>
+        <p>Please fill out the form below</p>
       </section>
 
       <section className="form">
+        <div className="form-group">
+          <label>Customer Name</label>
+          <input type="text" className="form-control" value={user.name} disabled />
+        </div>
+        <div className="form-group">
+          <label>Customer Email</label>
+          <input type="text" className="form-control" value={user.email} disabled />
+        </div>
+
         <form onSubmit={onSubmit}>
           <div className="form-group">
-            <label htmlFor="name">Customer Name</label>
-
-            <input
-              type="text"
-              id="name"
-              className="form-control"
-              value={user?.name || ''}
-              disabled
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="email">Customer Email</label>
-
-            <input
-              type="email"
-              id="email"
-              className="form-control"
-              value={user?.email || ''}
-              disabled
-            />
-          </div>
-
-          <div className="form-group">
             <label htmlFor="product">Product</label>
-
             <select
               id="product"
               className="form-control"
               value={product}
               onChange={(e) => setProduct(e.target.value)}
             >
-              <option value="iPhone">iPhone</option>
-              <option value="MacBook Pro">MacBook Pro</option>
-              <option value="iMac">iMac</option>
-              <option value="iPad">iPad</option>
-              <option value="Dell">Dell</option>
-              <option value="HP">HP</option>
-              <option value="Asus">Asus</option>
-              <option value="MSI">MSI</option>
-              <option value="Android">Android</option>
+              {PRODUCTS.map((p) => (
+                <option key={p} value={p}>{p}</option>
+              ))}
             </select>
           </div>
 
           <div className="form-group">
-            <label htmlFor="description">Description of the Issue</label>
-
-            <textarea
-              id="description"
+            <label htmlFor="category">Category</label>
+            <select
+              id="category"
               className="form-control"
-              rows="5"
-              placeholder="Describe your issue"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            >
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
           </div>
 
           <div className="form-group">
-            <button className="btn btn-block" type="submit">
-              Submit
-            </button>
+            <label htmlFor="priority">Priority</label>
+            <select
+              id="priority"
+              className="form-control"
+              value={priority}
+              onChange={(e) => setPriority(e.target.value)}
+            >
+              {PRIORITIES.map((p) => (
+                <option key={p} value={p}>
+                  {p.charAt(0).toUpperCase() + p.slice(1)}
+                </option>
+              ))}
+            </select>
           </div>
+
+          <div className="form-group">
+            <label htmlFor="description">Description of the issue</label>
+            <textarea
+              id="description"
+              className="form-control"
+              placeholder="Description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              maxLength={1000}
+              required
+            />
+            <small className="muted">{description.length}/1000</small>
+          </div>
+
+          <button className="btn btn-block">Submit</button>
         </form>
       </section>
     </>
-  );
+  )
 }
 
-export default NewTicket;
+export default NewTicket

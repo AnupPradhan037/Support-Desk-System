@@ -1,9 +1,6 @@
-import {
-  createSlice,
-  createAsyncThunk,
-} from '@reduxjs/toolkit'
-
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import noteService from './noteService'
+import { logout } from '../auth/authSlice'
 
 const initialState = {
   notes: [],
@@ -13,61 +10,44 @@ const initialState = {
   message: '',
 }
 
-// Get Notes
+const getErrorMessage = (error) =>
+  error.response?.data?.message || error.message || error.toString()
+
+// Get notes
 export const getNotes = createAsyncThunk(
   'notes/getAll',
   async (ticketId, thunkAPI) => {
     try {
-      const token =
-        thunkAPI.getState().auth.user.token
-
-      return await noteService.getNotes(
-        ticketId,
-        token
-      )
+      const user = thunkAPI.getState().auth.user
+      if (!user?.token) {
+        return thunkAPI.rejectWithValue('User is not logged in')
+      }
+      return await noteService.getNotes(ticketId, user.token)
     } catch (error) {
-      const message =
-        error.response?.data?.message ||
-        error.message ||
-        error.toString()
-
-      return thunkAPI.rejectWithValue(message)
+      return thunkAPI.rejectWithValue(getErrorMessage(error))
     }
   }
 )
 
-// Create Note
+// Create note
 export const createNote = createAsyncThunk(
   'notes/create',
-  async (
-    { ticketId, text },
-    thunkAPI
-  ) => {
+  async ({ ticketId, text }, thunkAPI) => {
     try {
-      const token =
-        thunkAPI.getState().auth.user.token
-
-      return await noteService.createNote(
-        ticketId,
-        { text },
-        token
-      )
+      const user = thunkAPI.getState().auth.user
+      if (!user?.token) {
+        return thunkAPI.rejectWithValue('User is not logged in')
+      }
+      return await noteService.createNote(ticketId, { text }, user.token)
     } catch (error) {
-      const message =
-        error.response?.data?.message ||
-        error.message ||
-        error.toString()
-
-      return thunkAPI.rejectWithValue(message)
+      return thunkAPI.rejectWithValue(getErrorMessage(error))
     }
   }
 )
 
 const noteSlice = createSlice({
-  name: 'note',
-
+  name: 'notes',
   initialState,
-
   reducers: {
     reset: (state) => {
       state.notes = []
@@ -77,70 +57,44 @@ const noteSlice = createSlice({
       state.message = ''
     },
   },
-
   extraReducers: (builder) => {
     builder
+      // Get notes
+      .addCase(getNotes.pending, (state) => {
+        state.isLoading = true
+        state.isError = false
+      })
+      .addCase(getNotes.fulfilled, (state, action) => {
+        state.isLoading = false
+        state.isSuccess = true
+        state.notes = action.payload
+      })
+      .addCase(getNotes.rejected, (state, action) => {
+        state.isLoading = false
+        state.isError = true
+        state.message = action.payload
+      })
 
-      // Get Notes
-      .addCase(
-        getNotes.pending,
-        (state) => {
-          state.isLoading = true
-          state.isError = false
-        }
-      )
+      // Create note
+      .addCase(createNote.pending, (state) => {
+        state.isLoading = true
+        state.isError = false
+      })
+      .addCase(createNote.fulfilled, (state, action) => {
+        state.isLoading = false
+        state.isSuccess = true
+        state.notes.push(action.payload)
+      })
+      .addCase(createNote.rejected, (state, action) => {
+        state.isLoading = false
+        state.isError = true
+        state.message = action.payload
+      })
 
-      .addCase(
-        getNotes.fulfilled,
-        (state, action) => {
-          state.isLoading = false
-          state.isSuccess = true
-          state.notes = action.payload
-        }
-      )
-
-      .addCase(
-        getNotes.rejected,
-        (state, action) => {
-          state.isLoading = false
-          state.isError = true
-          state.message = action.payload
-        }
-      )
-
-      // Create Note
-      .addCase(
-        createNote.pending,
-        (state) => {
-          state.isLoading = true
-          state.isError = false
-        }
-      )
-
-      .addCase(
-        createNote.fulfilled,
-        (state, action) => {
-          state.isLoading = false
-          state.isSuccess = true
-
-          state.notes.push(
-            action.payload
-          )
-        }
-      )
-
-      .addCase(
-        createNote.rejected,
-        (state, action) => {
-          state.isLoading = false
-          state.isError = true
-          state.message = action.payload
-        }
-      )
+      // Clear everything when the user logs out
+      .addCase(logout.fulfilled, () => initialState)
   },
 })
 
-export const { reset } =
-  noteSlice.actions
-
+export const { reset } = noteSlice.actions
 export default noteSlice.reducer

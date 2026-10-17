@@ -1,33 +1,9 @@
 const express = require('express')
+const router = express.Router({ mergeParams: true }) // required to read :ticketId
 
-const router =
-  express.Router()
+const { getNotes, createNote } = require('../controllers/noteController')
+const { protect } = require('../middleware/authMiddleware')
 
-const {
-  getNotes,
-  createNote,
-} = require(
-  '../controllers/noteController'
-)
-
-const {
-  protect,
-} = require(
-  '../middleware/authMiddleware'
-)
-
-// GET NOTES
-router.get(
-  '/',
-  protect,
-  getNotes
-)
-
-// CREATE NOTE
-router.post(
-  '/',
-  protect,
-  createNote
-)
+router.route('/').get(protect, getNotes).post(protect, createNote)
 
 module.exports = router

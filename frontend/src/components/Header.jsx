@@ -1,17 +1,26 @@
-import { FaSignInAlt, FaSignOutAlt, FaUser } from 'react-icons/fa'
+import {
+  FaSignInAlt,
+  FaSignOutAlt,
+  FaUser,
+  FaUserCog,
+  FaMoon,
+  FaSun,
+  FaChartBar,
+} from 'react-icons/fa'
 import { Link, useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
-import { logout, reset } from '../features/auth/authSlice'
+import { logout } from '../features/auth/authSlice'
+import useTheme from '../hooks/useTheme'
 
 function Header() {
   const navigate = useNavigate()
   const dispatch = useDispatch()
+  const { theme, toggleTheme } = useTheme()
 
   const { user } = useSelector((state) => state.auth)
 
-  const onLogout = () => {
-    dispatch(logout())
-    dispatch(reset())
+  const onLogout = async () => {
+    await dispatch(logout())
     navigate('/')
   }
 
@@ -23,12 +32,38 @@ function Header() {
         </div>
 
         <ul className="nav-links">
+          <li>
+            <button
+              type="button"
+              className="theme-toggle"
+              onClick={toggleTheme}
+              aria-label="Toggle dark mode"
+              title="Toggle dark mode"
+            >
+              {theme === 'dark' ? <FaSun /> : <FaMoon />}
+            </button>
+          </li>
+
           {user ? (
-            <li>
-              <button className="btn" onClick={onLogout}>
-                <FaSignOutAlt /> Logout
-              </button>
-            </li>
+            <>
+              {user?.isStaff && (
+                <li>
+                  <Link to="/dashboard">
+                    <FaChartBar /> Dashboard
+                  </Link>
+                </li>
+              )}
+              <li>
+                <Link to="/profile">
+                  <FaUserCog /> {user.name?.split(' ')[0] || 'Profile'}
+                </Link>
+              </li>
+              <li>
+                <button className="btn" onClick={onLogout}>
+                  <FaSignOutAlt /> Logout
+                </button>
+              </li>
+            </>
           ) : (
             <>
               <li>
@@ -36,7 +71,6 @@ function Header() {
                   <FaSignInAlt /> Login
                 </Link>
               </li>
-
               <li>
                 <Link to="/register">
                   <FaUser /> Register

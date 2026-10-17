@@ -1,7 +1,5 @@
 const express = require('express')
-
-const router =
-  express.Router()
+const router = express.Router()
 
 const {
   createTicket,
@@ -9,65 +7,26 @@ const {
   getTicket,
   updateTicket,
   closeTicket,
+  reopenTicket,
+  assignTicket,
+  unassignTicket,
   deleteTicket,
 } = require('../controllers/ticketController')
+const { protect, staffOnly } = require('../middleware/authMiddleware')
 
-const {
-  protect,
-} = require('../middleware/authMiddleware')
+router.use('/:ticketId/notes', require('./noteRoutes'))
 
-const noteRouter = require(
-  './noteRoutes'
-)
-
-// ==========================================
-// NOTES
-// /api/tickets/:ticketId/notes
-// ==========================================
-
-router.use(
-  '/:ticketId/notes',
-  noteRouter
-)
-
-// ==========================================
-// TICKETS
-// ==========================================
-
-router
-  .route('/')
-  .get(
-    protect,
-    getTickets
-  )
-  .post(
-    protect,
-    createTicket
-  )
+router.route('/').get(protect, getTickets).post(protect, createTicket)
 
 router
   .route('/:id')
-  .get(
-    protect,
-    getTicket
-  )
-  .put(
-    protect,
-    updateTicket
-  )
-  .delete(
-    protect,
-    deleteTicket
-  )
+  .get(protect, getTicket)
+  .put(protect, updateTicket)
+  .delete(protect, deleteTicket)
 
-// ==========================================
-// CLOSE
-// ==========================================
-
-router.put(
-  '/:id/close',
-  protect,
-  closeTicket
-)
+router.put('/:id/close', protect, closeTicket)
+router.put('/:id/reopen', protect, reopenTicket)
+router.put('/:id/assign', protect, staffOnly, assignTicket)
+router.put('/:id/unassign', protect, staffOnly, unassignTicket)
 
 module.exports = router

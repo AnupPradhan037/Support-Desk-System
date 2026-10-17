@@ -1,31 +1,47 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import authService from './authService'
 
-const user = JSON.parse(localStorage.getItem('user'))
+const getStoredUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem('user'))
+  } catch {
+    return null
+  }
+}
 
 const initialState = {
-  user: user ? user : null,
+  user: getStoredUser(),
   isLoading: false,
   isError: false,
   isSuccess: false,
   message: '',
 }
 
+const getErrorMessage = (error) =>
+  error.response?.data?.message || error.message || error.toString()
+
 // Register User
 export const register = createAsyncThunk(
   'auth/register',
-  async (user, thunkAPI) => {
+  async (userData, thunkAPI) => {
     try {
-      return await authService.register(user)
+      return await authService.register(userData)
     } catch (error) {
-      const message =
-        (error.response &&
-          error.response.data &&
-          error.response.data.message) ||
-        error.message ||
-        error.toString()
+      return thunkAPI.rejectWithValue(getErrorMessage(error))
+    }
+  }
+)
 
-      return thunkAPI.rejectWithValue(message)
+// Update profile
+export const updateProfile = createAsyncThunk(
+  'auth/updateProfile',
+  async (profileData, thunkAPI) => {
+    try {
+      const token = thunkAPI.getState().auth.user?.token
+      if (!token) return thunkAPI.rejectWithValue('User is not logged in')
+      return await authService.updateProfile(profileData, token)
+    } catch (error) {
+      return thunkAPI.rejectWithValue(getErrorMessage(error))
     }
   }
 )
@@ -33,29 +49,21 @@ export const register = createAsyncThunk(
 // Login User
 export const login = createAsyncThunk(
   'auth/login',
-  async (user, thunkAPI) => {
+  async (userData, thunkAPI) => {
     try {
-      return await authService.login(user)
+      return await authService.login(userData)
     } catch (error) {
-      const message =
-        (error.response &&
-          error.response.data &&
-          error.response.data.message) ||
-        error.message ||
-        error.toString()
-
-      return thunkAPI.rejectWithValue(message)
+      return thunkAPI.rejectWithValue(getErrorMessage(error))
     }
   }
 )
 
+
+
 // Logout User
-export const logout = createAsyncThunk(
-  'auth/logout',
-  async () => {
-    await authService.logout()
-  }
-)
+export const logout = createAsyncThunk('auth/logout', async () => {
+  authService.logout()
+})
 
 export const authSlice = createSlice({
   name: 'auth',
@@ -70,7 +78,6 @@ export const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-
       // Register
       .addCase(register.pending, (state) => {
         state.isLoading = true
@@ -103,19 +110,18 @@ export const authSlice = createSlice({
         state.user = null
       })
 
+            // Update profile
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        state.user = action.payload
+      })
+
       // Logout
-      .addCase(logout.pending, (state) => {
-        state.isLoading = true
-      })
       .addCase(logout.fulfilled, (state) => {
-        state.isLoading = false
         state.user = null
-        state.isSuccess = true
-      })
-      .addCase(logout.rejected, (state, action) => {
         state.isLoading = false
-        state.isError = true
-        state.message = action.payload
+        state.isError = false
+        state.isSuccess = false
+        state.message = ''
       })
   },
 })

@@ -1,37 +1,36 @@
 const mongoose = require('mongoose')
 
-const ticketSchema = mongoose.Schema(
+const ticketSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
       ref: 'User',
     },
-
+    assignedTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
     product: {
       type: String,
-      required: [true, 'Please select a Product'],
-      enum: [
-        'iphone',
-        'MacBook Pro',
-        'iMac',
-        'iPad',
-        'Dell',
-        'Asus',
-        'Msi',
-        'Hp',
-        'Android',
-      ],
+      required: [true, 'Please select a product'],
+      enum: ['iPhone', 'MacBook Pro', 'iMac', 'iPad', 'Dell', 'Asus', 'Msi', 'Hp', 'Android'],
     },
-
+    category: {
+      type: String,
+      enum: ['Billing', 'Hardware', 'Software', 'Account', 'Other'],
+      default: 'Other',
+    },
+    priority: {
+      type: String,
+      enum: ['low', 'medium', 'high', 'urgent'],
+      default: 'medium',
+    },
     description: {
       type: String,
-      required: [
-        true,
-        'Please Enter the description of the issue...',
-      ],
+      required: [true, 'Please enter a description of the issue'],
     },
-
     status: {
       type: String,
       required: true,
@@ -39,12 +38,7 @@ const ticketSchema = mongoose.Schema(
       default: 'new',
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 )
 
-module.exports = mongoose.model(
-  'Ticket',
-  ticketSchema
-)
+module.exports = mongoose.model('Ticket', ticketSchema)

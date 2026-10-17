@@ -1,26 +1,13 @@
-import { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector } from 'react-redux'
 
 const useAuthStatus = () => {
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [checkingStatus, setCheckingStatus] = useState(true);
+  const { user } = useSelector((state) => state.auth)
 
-  const { user } = useSelector((state) => state.auth);
-
-  useEffect(() => {
-    if (user) {
-      setLoggedIn(true);
-    } else {
-      setLoggedIn(false);
-    }
-
-    setCheckingStatus(false);
-  }, [user]);
-
+  // Derived directly from the store, so there is no flash of "logged out"
   return {
-    loggedIn,
-    checkingStatus,
-  };
-};
+    loggedIn: Boolean(user),
+    checkingStatus: false,
+  }
+}
 
-export default useAuthStatus;
+export default useAuthStatus

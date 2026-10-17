@@ -1,66 +1,43 @@
 const jwt = require('jsonwebtoken')
 const asyncHandler = require('express-async-handler')
+const User = require('../models/userModel')
 
-const User = require('../models/userModels')
+const protect = asyncHandler(async (req, res, next) => {
+  const authHeader = req.headers.authorization
 
-const protect = asyncHandler(
-  async (req, res, next) => {
-    let token
-
-    // Check Authorization header
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith(
-        'Bearer'
-      )
-    ) {
-      try {
-        token =
-          req.headers.authorization.split(
-            ' '
-          )[1]
-
-        const decoded =
-          jwt.verify(
-            token,
-            process.env.JWT_SECRET
-          )
-
-        req.user =
-          await User.findById(
-            decoded.id
-          ).select('-password')
-
-        if (!req.user) {
-          res.status(401)
-
-          throw new Error(
-            'User not found'
-          )
-        }
-
-        next()
-      } catch (error) {
-        console.error(error)
-
-        res.status(401)
-
-        throw new Error(
-          'Not authorized, token failed'
-        )
-      }
-    }
-
-    if (!token) {
-      res.status(401)
-
-      throw new Error(
-        'Not authorized, no token'
-      )
-    }
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    res.status(401)
+    throw new Error('Not authorized, no token')
   }
-)
 
-module.exports = {
-  protect,
+  const token = authHeader.split(' ')[1]
+
+  let decoded
+  try {
+    decoded = jwt.verify(token, process.env.JWT_SECRET)
+  } catch (error) {
+    res.status(401)
+    throw new Error('Not authorized, token failed')
+  }
+
+  const user = await User.findById(decoded.id).select('-password')
+
+  if (!user) {
+    res.status(401)
+    throw new Error('Not authorized, user not found')
+  }
+
+  req.user = user
+  next()
+})
+
+// Use after protect: blocks non-staff users
+const staffOnly = (req, res, next) => {
+  if (!req.user || !req.user.isStaff) {
+    res.status(403)
+    throw new Error('Staff access only')
+  }
+  next()
 }
+
+module.exports = { protect, staffOnly }

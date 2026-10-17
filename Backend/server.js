@@ -1,48 +1,46 @@
-const express = require('express');
-const dotenv = require('dotenv').config();
-const colors = require('colors');
-const cors = require('cors');
-const connectDB = require('./config/db');
+require('dotenv').config() // must be first
+require('colors')
 
-const { errorHandler } = require('./middleware/errorMiddleware');
+const express = require('express')
+const cors = require('cors')
+const connectDB = require('./config/db')
+const { errorHandler, notFound } = require('./middleware/errorMiddleware')
 
-const app = express();
+// Fail fast if required env vars are missing
+const required = ['MONGO_URI', 'JWT_SECRET']
+const missing = required.filter((key) => !process.env[key])
+if (missing.length) {
+  console.error(`Missing env variables: ${missing.join(', ')}`.red.bold)
+  process.exit(1)
+}
 
-const port = process.env.PORT || 8080;
+const app = express()
+const port = process.env.PORT || 5000
 
-console.log('1. Server file loaded');
-
-// Connect to Database
-connectDB();
-
-console.log('2. After connectDB');
-
-// Enable CORS
 app.use(
   cors({
-    origin: 'http://localhost:3000',
+    origin: process.env.CLIENT_URL || 'http://localhost:3000',
     credentials: true,
   })
-);
+)
 
-// Body Parser
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json())
+app.use(express.urlencoded({ extended: false }))
+app.use('/api/stats', require('./routes/statsRoutes'))
 
-// Home Route
 app.get('/', (req, res) => {
-  res.send('Support Ticket API is running...');
-});
+  res.send('Support Ticket API is running...')
+})
 
-// Routes
-app.use('/api/users', require('./routes/userRoutes'));
-app.use('/api/tickets', require('./routes/ticketRoutes'));
+app.use('/api/users', require('./routes/userRoutes'))
+app.use('/api/tickets', require('./routes/ticketRoutes'))
 
-// Error Handler
-app.use(errorHandler);
+app.use(notFound) // after routes
+app.use(errorHandler) // last
 
-console.log('3. Before app.listen');
-
-app.listen(port, () => {
-  console.log(`Server started on port ${port}`.yellow.bold);
-});
+// Connect to the DB first, then start listening
+connectDB().then(() => {
+  app.listen(port, () => {
+    console.log(`Server started on port ${port}`.yellow.bold)
+  })
+})

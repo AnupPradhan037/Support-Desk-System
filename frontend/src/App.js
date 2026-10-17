@@ -1,16 +1,19 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 
-import Header from './components/Header';
-import PrivateRoute from './components/PrivateRoute';
+import Header from './components/Header'
+import PrivateRoute from './components/PrivateRoute'
 
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import NewTicket from './pages/NewTicket';
-import Tickets from './pages/Tickets';
-import Ticket from './pages/Ticket';
+import Home from './pages/Home'
+import Login from './pages/Login'
+import Register from './pages/Register'
+import NewTicket from './pages/NewTicket'
+import Tickets from './pages/Tickets'
+import Ticket from './pages/Ticket'
+import Profile from './pages/Profile'
+import StaffRoute from './components/StaffRoute'
+import Dashboard from './pages/Dashboard'
 
 function App() {
   return (
@@ -19,7 +22,6 @@ function App() {
 
       <main className="container">
         <Routes>
-
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
@@ -30,14 +32,21 @@ function App() {
             <Route path="/new-ticket" element={<NewTicket />} />
             <Route path="/tickets" element={<Tickets />} />
             <Route path="/tickets/:ticketId" element={<Ticket />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route element={<StaffRoute />}>
+  <Route path="/dashboard" element={<Dashboard />} />
+</Route>
+            
           </Route>
 
+          {/* Unknown URLs */}
+          <Route path="*" element={<h2>Page not found</h2>} />
         </Routes>
       </main>
 
-      <ToastContainer />
+      <ToastContainer position="top-right" autoClose={3000} />
     </Router>
-  );
+  )
 }
 
-export default App;
+export default App

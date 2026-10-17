@@ -1,7 +1,10 @@
-import {Link} from 'react-router-dom';
-import { FaQuestionCircle, FaTicketAlt } from 'react-icons/fa';
+import { Link } from 'react-router-dom'
+import { useSelector } from 'react-redux'
+import { FaQuestionCircle, FaTicketAlt, FaChartBar } from 'react-icons/fa'
 
 function Home() {
+  const { user } = useSelector((state) => state.auth)
+
   return (
     <>
       <section className="heading">
@@ -9,15 +12,21 @@ function Home() {
         <p>Please choose from an option below</p>
       </section>
 
-      <Link to='/new-ticket' className='btn btn-reverse btn-block'>
-      <FaQuestionCircle/> Create a new Support Ticket
+      <Link to="/new-ticket" className="btn btn-reverse btn-block">
+        <FaQuestionCircle /> Create New Ticket
       </Link>
 
-      <Link to='/tickets' className='btn  btn-block'>
-      <FaTicketAlt/> View your Existing Ticket
+      <Link to="/tickets" className="btn btn-block">
+        <FaTicketAlt /> {user?.isStaff ? 'View All Tickets' : 'View My Tickets'}
       </Link>
+
+      {user?.isStaff && (
+        <Link to="/dashboard" className="btn btn-reverse btn-block">
+          <FaChartBar /> Staff Dashboard
+        </Link>
+      )}
     </>
-  );
+  )
 }
 
-export default Home;
+export default Home

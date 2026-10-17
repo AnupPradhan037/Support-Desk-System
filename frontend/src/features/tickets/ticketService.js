@@ -2,130 +2,59 @@ import axios from 'axios'
 
 const API_URL = '/api/tickets/'
 
-// ==========================================
-// CREATE TICKET
-// ==========================================
+const authConfig = (token) => ({
+  headers: { Authorization: `Bearer ${token}` },
+})
 
 const createTicket = async (ticketData, token) => {
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
-
-  const response = await axios.post(
-    API_URL,
-    ticketData,
-    config
-  )
-
+  const response = await axios.post(API_URL, ticketData, authConfig(token))
   return response.data
 }
 
-// ==========================================
-// GET ALL TICKETS
-// ==========================================
-
-const getTickets = async (token) => {
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
-
-  const response = await axios.get(
-    API_URL,
-    config
+// params: { page, limit, status, priority, search, assigned } (empty values are dropped)
+const getTickets = async (token, params = {}) => {
+  const cleaned = Object.fromEntries(
+    Object.entries(params).filter(([, value]) => value)
   )
-
-  return response.data
+  const response = await axios.get(API_URL, {
+    ...authConfig(token),
+    params: cleaned,
+  })
+  return response.data // { tickets, page, pages, total }
 }
-
-// ==========================================
-// GET SINGLE TICKET
-// ==========================================
 
 const getTicket = async (ticketId, token) => {
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
-
-  console.log('Getting ticket:', ticketId)
-
-  const response = await axios.get(
-    `${API_URL}${ticketId}`,
-    config
-  )
-
-  console.log('Single ticket response:', response.data)
-
+  const response = await axios.get(`${API_URL}${ticketId}`, authConfig(token))
   return response.data
 }
 
-// ==========================================
-// UPDATE TICKET
-// ==========================================
-
-const updateTicket = async (
-  ticketId,
-  ticketData,
-  token
-) => {
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
-
-  const response = await axios.put(
-    `${API_URL}${ticketId}`,
-    ticketData,
-    config
-  )
-
+const updateTicket = async (ticketId, ticketData, token) => {
+  const response = await axios.put(`${API_URL}${ticketId}`, ticketData, authConfig(token))
   return response.data
 }
-
-// ==========================================
-// CLOSE TICKET
-// ==========================================
 
 const closeTicket = async (ticketId, token) => {
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
-
-  const response = await axios.put(
-    `${API_URL}${ticketId}`,
-    {
-      status: 'closed',
-    },
-    config
-  )
-
+  const response = await axios.put(`${API_URL}${ticketId}/close`, {}, authConfig(token))
   return response.data
 }
 
-// ==========================================
-// DELETE TICKET
-// ==========================================
+const reopenTicket = async (ticketId, token) => {
+  const response = await axios.put(`${API_URL}${ticketId}/reopen`, {}, authConfig(token))
+  return response.data
+}
+
+const assignTicket = async (ticketId, token) => {
+  const response = await axios.put(`${API_URL}${ticketId}/assign`, {}, authConfig(token))
+  return response.data
+}
+
+const unassignTicket = async (ticketId, token) => {
+  const response = await axios.put(`${API_URL}${ticketId}/unassign`, {}, authConfig(token))
+  return response.data
+}
 
 const deleteTicket = async (ticketId, token) => {
-  const config = {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  }
-
-  const response = await axios.delete(
-    `${API_URL}${ticketId}`,
-    config
-  )
-
+  const response = await axios.delete(`${API_URL}${ticketId}`, authConfig(token))
   return response.data
 }
 
@@ -135,6 +64,9 @@ const ticketService = {
   getTicket,
   updateTicket,
   closeTicket,
+  reopenTicket,
+  assignTicket,
+  unassignTicket,
   deleteTicket,
 }
 

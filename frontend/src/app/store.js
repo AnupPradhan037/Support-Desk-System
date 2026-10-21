@@ -5,6 +5,9 @@ import authReducer, { logout } from '../features/auth/authSlice'
 import ticketReducer from '../features/tickets/ticketSlice'
 import noteReducer from '../features/notes/noteSlice'
 
+
+axios.defaults.baseURL = process.env.REACT_APP_API_URL || ''
+
 export const store = configureStore({
   reducer: {
     auth: authReducer,

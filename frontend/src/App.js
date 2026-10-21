@@ -34,9 +34,9 @@ function App() {
             <Route path="/tickets/:ticketId" element={<Ticket />} />
             <Route path="/profile" element={<Profile />} />
             <Route element={<StaffRoute />}>
-  <Route path="/dashboard" element={<Dashboard />} />
-</Route>
-            
+              <Route path="/dashboard" element={<Dashboard />} />
+            </Route>
+
           </Route>
 
           {/* Unknown URLs */}

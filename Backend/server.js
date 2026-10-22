@@ -31,6 +31,7 @@ const allowedOrigins = [
   'http://localhost:3000',
   'https://support-desk-system-gamma.vercel.app',
   'https://support-desk-system-git-main-anuppradhan9292-6725.vercel.app',
+  'https://support-desk-system-lqr27io62-anuppradhan9292-6725.vercel.app',
   ...(process.env.CLIENT_URL || '')
     .split(',')
     .map((url) => url.trim().replace(/\/+$/, ''))
